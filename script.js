@@ -27,6 +27,32 @@ async function detectPose() {
   const video = document.getElementById('video');
   clothingEntity = document.getElementById('clothing');
 
+  // URL에서 product_id 추출
+  const urlParams = new URLSearchParams(window.location.search);
+  const productId = urlParams.get('product_id');
+
+  if (!productId) {
+    console.error('Product ID not found in URL.');
+    return;
+  }
+
+  try {
+    // 백엔드 API에서 제품 정보 가져오기
+    const response = await fetch(`https://polochip.herokuapp.com/api/products/${productId}`);
+    const product = await response.json();
+
+    if (product.error) {
+      console.error(product.error);
+      return;
+    }
+
+    // 옷 이미지 설정
+    clothingEntity.setAttribute('src', product.imageUrl);
+  } catch (error) {
+    console.error('Error fetching product data:', error);
+    return;
+  }
+
   async function poseDetectionFrame() {
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
       // PoseNet을 사용하여 포즈 추정
@@ -69,4 +95,3 @@ async function detectPose() {
 
   poseDetectionFrame();
 }
-
