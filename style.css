@@ -1,76 +1,70 @@
 /* frontend/style.css */
 
-/* 기본 스타일 리셋 */
 body, html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  background-color: #000; /* 배경색을 검은색으로 설정 */
 }
 
-/* AR 버튼 스타일 */
-#ar-button {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  padding: 10px 20px;
-  font-size: 18px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#ar-button:hover {
-  background-color: #218838;
-}
-
-/* 비디오 요소 스타일 */
 #video {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: none; /* 초기에는 숨김 */
+  object-fit: cover; /* 비디오가 화면을 채우도록 조정 */
+  z-index: -1; /* 비디오를 뒤로 배치 */
 }
 
-/* A-Frame 씬 스타일 */
 a-scene {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+  z-index: 0;
 }
 
-
-/* frontend/style.css */
-
-/* 기존 스타일 유지 */
-
-/* 촬영 버튼 스타일 */
-#capture-button {
+#switch-camera-button, #share-button {
   position: absolute;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10;
   padding: 10px 20px;
-  font-size: 18px;
-  background-color: #007bff;
-  color: white;
+  font-size: 16px;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.8);
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  margin-top: 10px;
 }
 
-#capture-button:hover {
-  background-color: #0069d9;
+#switch-camera-button {
+  bottom: 80px; /* 공유 버튼과 겹치지 않도록 위치 조정 */
+}
+
+@media (max-width: 768px) {
+  #switch-camera-button, #share-button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  a-image {
+    scale: 0.8 0.8 0.8; /* 모바일에서 이미지 크기 축소 */
+  }
+}
+
+@media (min-width: 769px) {
+  #switch-camera-button, #share-button {
+    font-size: 18px;
+    padding: 12px 24px;
+  }
+
+  a-image {
+    scale: 1 1 1;
+  }
 }
