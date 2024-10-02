@@ -15,19 +15,6 @@ async function startAR() {
   console.log('AR 세션 시작 시도');
 
   try {
-    // 비디오 요소 설정
-    const video = document.getElementById('video');
-    video.style.display = 'block';
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { 
-        facingMode: currentFacingMode,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      } 
-    });
-    video.srcObject = stream;
-    video.play();
-
     // PoseNet 모델 로드
     net = await posenet.load({
       architecture: 'MobileNetV1',
@@ -41,7 +28,7 @@ async function startAR() {
     detectPose();
   } catch (error) {
     console.error('AR 세션 시작 실패:', error);
-    alert('카메라 접근이 필요합니다. 설정에서 허용해 주세요.');
+    alert('PoseNet 모델 로드에 실패했습니다.');
   }
 }
 
@@ -66,9 +53,11 @@ async function switchCamera() {
         height: { ideal: 720 }
       } 
     });
-    const video = document.getElementById('video');
-    video.srcObject = stream;
-    video.play();
+    const scene = document.querySelector('a-scene');
+    if (scene && scene.camera) {
+      scene.camera.aspect = window.innerWidth / window.innerHeight;
+      scene.camera.updateProjectionMatrix();
+    }
     console.log('카메라 전환 성공');
   } catch (error) {
     console.error('카메라 전환 실패:', error);
@@ -79,7 +68,6 @@ async function switchCamera() {
 // PoseNet을 사용하여 신체 포인트 감지
 async function detectPose() {
   console.log('detectPose 함수 호출됨');
-  const video = document.getElementById('video');
   clothingEntity = document.getElementById('clothing');
 
   // URL에서 product_id 추출
@@ -114,39 +102,37 @@ async function detectPose() {
   }
 
   async function poseDetectionFrame() {
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      // PoseNet을 사용하여 포즈 추정
-      const pose = await net.estimateSinglePose(video, {
-        flipHorizontal: true
-      });
+    // A-Frame 씬에서 현재 카메라 객체 가져오기
+    const scene = document.querySelector('a-scene');
+    const camera = scene.camera;
 
-      // 어깨 포인트 추출
-      const leftShoulder = pose.keypoints.find(k => k.part === 'leftShoulder');
-      const rightShoulder = pose.keypoints.find(k => k.part === 'rightShoulder');
+    // PoseNet을 사용하여 포즈 추정
+    const pose = await net.estimateSinglePose(scene.querySelector('canvas'), {
+      flipHorizontal: true
+    });
 
-      if (leftShoulder.score > 0.5 && rightShoulder.score > 0.5) {
-        // 중앙 어깨 위치 계산
-        const centerX = (leftShoulder.position.x + rightShoulder.position.x) / 2;
-        const centerY = (leftShoulder.position.y + rightShoulder.position.y) / 2;
+    // 어깨 포인트 추출
+    const leftShoulder = pose.keypoints.find(k => k.part === 'leftShoulder');
+    const rightShoulder = pose.keypoints.find(k => k.part === 'rightShoulder');
 
-        // 화면 크기 가져오기
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
+    if (leftShoulder.score > 0.5 && rightShoulder.score > 0.5) {
+      // 중앙 어깨 위치 계산
+      const centerX = (leftShoulder.position.x + rightShoulder.position.x) / 2;
+      const centerY = (leftShoulder.position.y + rightShoulder.position.y) / 2;
 
-        // 중앙 좌표를 -1 ~ 1 범위로 변환 (A-Frame 좌표계에 맞춤)
-        const aframeX = (centerX / screenWidth) * 2 - 1;
-        const aframeY = -(centerY / screenHeight) * 2 + 1;
+      // 화면 크기 가져오기
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
 
-        // A-Frame 씬에서 카메라의 월드 좌표 가져오기
-        const scene = document.querySelector('a-scene');
-        const camera = scene.camera;
+      // 중앙 좌표를 -1 ~ 1 범위로 변환 (A-Frame 좌표계에 맞춤)
+      const aframeX = (centerX / screenWidth) * 2 - 1;
+      const aframeY = -(centerY / screenHeight) * 2 + 1;
 
-        // 중앙 좌표를 3D 공간으로 변환
-        const vector = new THREE.Vector3(aframeX, aframeY, -1).unproject(camera);
+      // 중앙 좌표를 3D 공간으로 변환
+      const vector = new THREE.Vector3(aframeX, aframeY, -1).unproject(camera);
 
-        // 옷 이미지의 위치 설정 (Z 축을 -3으로 고정)
-        clothingEntity.setAttribute('position', `${vector.x} ${vector.y} -3`);
-      }
+      // 옷 이미지의 위치 설정 (Z 축을 -3으로 고정)
+      clothingEntity.setAttribute('position', `${vector.x} ${vector.y} -3`);
     }
 
     // 다음 프레임 요청
@@ -166,14 +152,11 @@ async function sharePhoto() {
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
 
-  // 비디오 피드 그리기
-  const video = document.getElementById('video');
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-  // A-Frame 씬을 이미지로 렌더링
+  // A-Frame 씬의 배경 캔버스 가져오기
   const scene = document.querySelector('a-scene');
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(canvas.width, canvas.height);
+  const renderer = scene.renderer;
+
+  // A-Frame 씬을 렌더링
   renderer.render(scene.object3D, scene.camera);
 
   // 캔버스에 A-Frame 씬 그리기

@@ -1,5 +1,3 @@
-<!-- frontend/ar.html -->
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,19 +14,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <!-- 전면/후면 카메라 전환 버튼 -->
   <button id="switch-camera-button" onclick="switchCamera()">카메라 전환</button>
   
-  <!-- AR 시작하기 버튼 (숨김) -->
-  <!-- <button id="ar-button" onclick="startAR()">AR 시작하기</button> -->
-  
-  <!-- 비디오 요소 (카메라 스트림) -->
-  <video id="video" autoplay playsinline></video>
+  <!-- 공유하기 버튼 -->
+  <button id="share-button" onclick="sharePhoto()">공유하기</button>
   
   <!-- A-Frame 씬 -->
-  <a-scene embedded arjs='sourceType: webcam;' screenshot="trigger: capture;">
-
+  <a-scene embedded arjs='sourceType: webcam;' renderer="logarithmicDepthBuffer: true; alpha: true">
     <!-- 옷 이미지 오버레이 -->
     <a-image 
       id="clothing" 
@@ -39,9 +32,6 @@
     </a-image>
   </a-scene>
 
-  <!-- 공유하기 버튼으로 변경 -->
-  <button id="share-button" onclick="sharePhoto()">공유하기</button>
-  
   <!-- 스크립트 파일 -->
   <script src="script.js"></script>
 </body>
