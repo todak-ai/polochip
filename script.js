@@ -5,6 +5,7 @@ let clothingEntity; // A-Frame의 a-image 엔티티
 
 // AR 시작 버튼 클릭 시 호출되는 함수
 async function startAR() {
+  console.log('AR 시작하기 버튼 클릭됨'); // 디버그용 로그 추가
   // AR 버튼 숨기기
   document.getElementById('ar-button').style.display = 'none';
   
@@ -24,6 +25,7 @@ async function startAR() {
 
 // PoseNet을 사용하여 신체 포인트 감지
 async function detectPose() {
+  console.log('detectPose 함수 호출됨'); // 디버그용 로그 추가
   const video = document.getElementById('video');
   clothingEntity = document.getElementById('clothing');
 
@@ -37,8 +39,12 @@ async function detectPose() {
   }
 
   try {
+    console.log('Fetching product data...'); // 디버그용 로그 추가
     // 백엔드 API에서 제품 정보 가져오기
-    const response = await fetch(`https://polochip.herokuapp.com/api/products/${productId}`);
+    const response = await fetch(`https://polochip-27938865dd00.herokuapp.com/api/products/${productId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const product = await response.json();
 
     if (product.error) {
@@ -48,6 +54,7 @@ async function detectPose() {
 
     // 옷 이미지 설정
     clothingEntity.setAttribute('src', product.imageUrl);
+    console.log('Product data fetched successfully:', product); // 디버그용 로그 추가
   } catch (error) {
     console.error('Error fetching product data:', error);
     return;
@@ -84,7 +91,7 @@ async function detectPose() {
         // 중앙 좌표를 3D 공간으로 변환
         const vector = new THREE.Vector3(aframeX, aframeY, -1).unproject(camera);
 
-        // 클로징 이미지의 위치 설정 (Z 축을 -3으로 고정)
+        // 옷 이미지의 위치 설정 (Z 축을 -3으로 고정)
         clothingEntity.setAttribute('position', `${vector.x} ${vector.y} -3`);
       }
     }
